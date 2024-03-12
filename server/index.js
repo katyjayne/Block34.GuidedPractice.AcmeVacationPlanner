@@ -10,6 +10,36 @@ const {
   destroyVacation,
 } = require("./db");
 
+const express = require("express");
+const morgan = require("morgan");
+const app = express();
+
+app.use(morgan("dev"));
+
+app.get("/api/users", async (req, res, next) => {
+  try {
+    res.send(await fetchUsers());
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.get("/api/places", async (req, res, next) => {
+  try {
+    res.send(await fetchPlaces());
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.get("/api/vacations", async (req, res, next) => {
+  try {
+    res.send(await fetchVacations());
+  } catch (ex) {
+    next(ex);
+  }
+});
+
 const init = async () => {
   console.log("connecting to database");
   await client.connect();
@@ -51,6 +81,15 @@ const init = async () => {
   await destroyVacation(vacations[0]);
 
   console.log(await fetchVacations());
+
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`listening on port ${port}`);
+    console.log("TEST OUT APP WITH curl:");
+    console.log(`curl localhost:${port}/api/users`);
+    console.log(`curl localhost:${port}/api/places`);
+    console.log(`curl localhost:${port}/api/vacations`);
+  });
 };
 
 init();
