@@ -15,10 +15,34 @@ const morgan = require("morgan");
 const app = express();
 
 app.use(morgan("dev"));
+app.use(express.json());
 
 app.get("/api/users", async (req, res, next) => {
   try {
     res.send(await fetchUsers());
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.delete("/api/users/:userId/vacations/:id", async (req, res, next) => {
+  try {
+    await destroyVacation({ id: req.params.id, user_id: req.params.userId });
+    res.sendStatus(204);
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.post("/api/users/:id/vacations", async (req, res, next) => {
+  try {
+    res.status(201).send(
+      await createVacation({
+        user_id: req.params.id,
+        place_id: req.body.place_id,
+        travel_date: req.body.travel_date,
+      })
+    );
   } catch (ex) {
     next(ex);
   }
@@ -38,6 +62,11 @@ app.get("/api/vacations", async (req, res, next) => {
   } catch (ex) {
     next(ex);
   }
+});
+
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(err.status || 500).send({ error: err.message || err });
 });
 
 const init = async () => {
@@ -89,6 +118,12 @@ const init = async () => {
     console.log(`curl localhost:${port}/api/users`);
     console.log(`curl localhost:${port}/api/places`);
     console.log(`curl localhost:${port}/api/vacations`);
+    console.log(
+      `curl -X DELETE localhost:${port}/api/users/${fiona.id}/vacations${vacations[2].id}`
+    );
+    console.log(
+      `curl -X POST localhost:${port}/api/users/${fiona.id}/vacations -d '{"travel_date": "05/01/2024", "place_id": "${oaxaca.id}"}' -H "Content-Type:application/json"`
+    );
   });
 };
 
